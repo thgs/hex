@@ -1,0 +1,24 @@
+{
+    "name": "thgs/hex",
+    "description": "A hex editor",
+    "keywords": ["hex", "editor", "hexadecimal"],
+    "homepage": "https://github.com/thgs/hex",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "thgs",
+            "email": "theogpl57@gmail.com",
+            "homepage": "https://github.com/thgs",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "thgs\\Hex\\": "src/"
+        }
+    }
+}
