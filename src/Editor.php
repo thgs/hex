@@ -2,50 +2,70 @@
 
 namespace thgs\Hex;
 
+use thgs\Hex\Exception\StreamNotInitialised;
 use thgs\Hex\Formatter\FormatterInterface;
 use thgs\Hex\Formatter\SimpleHexFormatter;
 use thgs\Hex\Output\DisplayOutputInterface;
 use thgs\Hex\Output\EchoOutput;
+use thgs\Hex\Stream\IOStream;
+use thgs\Hex\Stream\OperateOnCopy;
+use thgs\Hex\Stream\StreamProviderInterface;
 
 class Editor
 {
-    private $filename;
+    /**
+     * @var StreamProviderInterface|null
+     */
+    private $stream;
     private FormatterInterface $formatter;
     private DisplayOutputInterface $display;
 
     /**
      * @param FormatterInterface $formatter
      * @param DisplayOutputInterface $display
+     * @param StreamProviderInterface $stream
      */
-    public function __construct(FormatterInterface $formatter = null, DisplayOutputInterface $display = null)
-    {
+    public function __construct(
+        FormatterInterface $formatter = null,
+        DisplayOutputInterface $display = null,
+        StreamProviderInterface $stream = null
+    ) {
         $this->formatter = $formatter ?? new SimpleHexFormatter(8);
         $this->display = $display ?? new EchoOutput();
+        $this->stream = $stream;
     }
 
     /**
      * @param string $file
      * @return void
      */
-    public function selectFile($file)
+    public function selectFile($file): void
     {
-        if (!file_exists($file)) {
-            throw new \Exception('File does not exist');
-        }
+        $this->stream = new IOStream($file);
+    }
 
-        // maybe check r/w perms
-
-        $this->filename = $file;
+    /**
+     * @param string $inputFile     string for now
+     * @param string $outputFile    string for now
+     * @return void
+     */
+    public function operateOnCopy($inputFile, $outputFile): void
+    {
+        $this->stream = new OperateOnCopy($inputFile, $outputFile);
     }
 
     /**
      * @param integer $startingOffset
      * @param integer $readBytes
      * @return void
+     *
+     * @throws StreamNotInitialised
      */
     public function dump($startingOffset = 0, $readBytes = 512): void
     {
-        $handle = fopen($this->filename, 'rb');
+        StreamNotInitialised::assertNotEmpty($this->stream);
+
+        $handle = $this->stream->readStream();
 
         if ($startingOffset) {
             fseek($handle, $startingOffset);
@@ -63,17 +83,18 @@ class Editor
     }
 
     /**
-     * Undocumented function
-     *
      * @param integer $startAt
      * @param string $value         without spaces for now
      * @return void
+     *
+     * @throws StreamNotInitialised
      */
     public function update($startAt, $value): void
     {
-        // @todo store in history
+        StreamNotInitialised::assertNotEmpty($this->stream);
 
-        $handle = fopen($this->filename, 'rb+');
+        // @todo store in history
+        $handle = $this->stream->writeStream();
         fseek($handle, $startAt);
         $binary = hex2bin($value);
 
@@ -81,9 +102,17 @@ class Editor
         fclose($handle);
     }
 
-    public function seek($startAt, $value, $limit = null): array
+    /**
+     * @param int $startAt
+     * @param string $value         string for now
+     * @param int|null $limit
+     * @return array                array for now
+     */
+    public function seek(int $startAt, string $value, ?int $limit = null): array
     {
-        $handle = fopen($this->filename, 'rb');
+        StreamNotInitialised::assertNotEmpty($this->stream);
+
+        $handle = $this->stream->readStream();
         fseek($handle, $startAt);
         $binary = hex2bin($value);
 
