@@ -2,10 +2,31 @@
 
 namespace thgs\Hex;
 
+use thgs\Hex\Formatter\FormatterInterface;
+use thgs\Hex\Formatter\SimpleHexFormatter;
+use thgs\Hex\Output\DisplayOutputInterface;
+use thgs\Hex\Output\EchoOutput;
+
 class Editor
 {
     private $filename;
+    private FormatterInterface $formatter;
+    private DisplayOutputInterface $display;
 
+    /**
+     * @param FormatterInterface $formatter
+     * @param DisplayOutputInterface $display
+     */
+    public function __construct(FormatterInterface $formatter = null, DisplayOutputInterface $display = null)
+    {
+        $this->formatter = $formatter ?? new SimpleHexFormatter(8);
+        $this->display = $display ?? new EchoOutput();
+    }
+
+    /**
+     * @param string $file
+     * @return void
+     */
     public function selectFile($file)
     {
         if (!file_exists($file)) {
@@ -18,39 +39,27 @@ class Editor
     }
 
     /**
-     * @param integer $offset
-     * @param integer $endOffset
-     * @param integer $lineAt       LineAt could be also a formatter option?
+     * @param integer $startingOffset
+     * @param integer $readBytes
      * @return void
      */
-    public function dump($offset = 0, $endOffset = 512, $lineAt = 32): void
+    public function dump($startingOffset = 0, $readBytes = 512): void
     {
         $handle = fopen($this->filename, 'rb');
-        $data = fread($handle, $endOffset); // read everything, assume offset starts=0
+
+        if ($startingOffset) {
+            fseek($handle, $startingOffset);
+        }
+        $data = fread($handle, $readBytes);
         fclose($handle);
 
-        $lines = str_split($data, $lineAt);
+        // @todo this needs a better implementation (memory)
+        $lines = str_split($data, $this->formatter->splitLineAt());
 
-        foreach ($lines as $kOffset => $lineData) {
-            $hex = wordwrap(bin2hex($lineData), 2, ' ', true);
-
-            echo str_pad(dechex($kOffset * $lineAt), 4, '0', STR_PAD_LEFT) . ': ';  // address
-            echo str_pad($hex, $lineAt*2 + $lineAt, ' ');                           // hex
-            echo $this->prettyPrint($lineData) . PHP_EOL;                                  // output in Ascii
+        foreach ($lines as $currentOffset => $lineData) {
+            $formatted = $this->formatter->format($lineData, $startingOffset + $currentOffset, );
+            $this->display->outputLine($formatted);
         }
-    }
-
-    public function prettyPrint($string): void
-    {
-        $output = '';
-        $split = str_split($string, 1);
-        foreach ($split as $byte) {
-            $ord = ord($byte);
-            $output .= $ord >= 32 && $ord <= 127        // not sure about this range
-                ? $byte
-                : '.';
-        }
-        echo $output;
     }
 
     /**
