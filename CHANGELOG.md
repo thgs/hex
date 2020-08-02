@@ -6,6 +6,10 @@ Project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Link in Changelog for `0.0.11` version compare
+
 ## [0.0.11] - 2020-08-02
 
 ### Added
@@ -36,5 +40,5 @@ Project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
 [unreleased]: https://github.com/thgs/hex/compare/v0.0.11...HEAD
-[0.0.11]: https://github.com/thgs/hex/compare/v0.0.11...v0.0.1
+[0.0.11]: https://github.com/thgs/hex/compare/v0.0.1...v0.0.11
 [0.0.1]: https://github.com/thgs/hex/releases/tag/v0.0.1
