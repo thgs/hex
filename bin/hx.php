@@ -2,10 +2,11 @@
 <?php
 
 use thgs\Hex\Editor;
+use thgs\Hex\Output\StreamOutput;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$editor = new Editor();
+$editor = new Editor(null, new StreamOutput('php://stdout'));
 
 // $editor->selectFile('/Users/theo/test.txt');
 $editor->operateOnCopy('/Users/theo/test.txt', '/Users/theo/test2.txt');

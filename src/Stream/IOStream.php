@@ -14,6 +14,11 @@ class IOStream implements StreamProviderInterface
      */
     public function __construct($filename)
     {
+        if ($this->hasWrapper($filename)) {
+            $this->filename = $filename;
+            return;
+        }
+
         if (is_string($filename) && !file_exists($filename)) {
             throw new FileNotFound($filename);
         }
@@ -37,5 +42,14 @@ class IOStream implements StreamProviderInterface
     public function writeStream()
     {
         return fopen($this->filename, 'rb+');
+    }
+
+    /**
+     * @param string $filename
+     * @return boolean
+     */
+    private function hasWrapper(string $filename): bool
+    {
+        return false !== strpos($filename, '//');
     }
 }
